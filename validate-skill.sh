@@ -5,9 +5,12 @@
 #   1 = NEEDS CHANGES - Fixable issues (missing fields, format problems)
 #   2 = REJECTED - Critical failures (security issues, missing required files)
 
+# Fail on errors, undefined vars, and pipe failures (except where we expect failures)
+set -uo pipefail
+
 SKILL_DIR="$1"
 
-if [ -z "$SKILL_DIR" ]; then
+if [ -z "${SKILL_DIR:-}" ]; then
     echo "Usage: $0 <skill-directory>"
     exit 1
 fi
@@ -50,40 +53,73 @@ fi
 
 # Security checks (only if SKILL.md exists)
 if [ -f "$SKILL_DIR/SKILL.md" ]; then
-    # Prompt injection patterns
-    if grep -qiE "ignore (previous|prior|earlier) (instructions?|prompts?|commands?)" "$SKILL_DIR/SKILL.md"; then
-        echo "[FAIL] Security: Prompt injection detected - 'ignore previous instructions' (CRITICAL)"
+    # Prompt injection patterns - covers common bypass variants
+    if grep -qiE "(ignore|disregard|override|forget|discard)\s+(previous|prior|earlier|all|any|initial|original)\s*(instructions?|prompts?|commands?|rules?|guidance|directives|programming|training)?" "$SKILL_DIR/SKILL.md"; then
+        echo "[FAIL] Security: Prompt injection detected - instruction override pattern (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
     
-    if grep -qiE "(output|show|print|display).*(system prompt|system message|original prompt)" "$SKILL_DIR/SKILL.md"; then
+    # Broader injection patterns: jailbreak, role override, hidden instructions
+    if grep -qiE "(you are now|you are free from|instead (follow|obey)|new directive|hidden instruction|override your (core|safety|security)|from now on|jailbreak|developer mode|dan mode)" "$SKILL_DIR/SKILL.md"; then
+        echo "[FAIL] Security: Prompt injection detected - role override or jailbreak pattern (CRITICAL)"
+        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
+    fi
+    
+    if grep -qiE "(output|show|print|display|reveal|expose|leak).*(system prompt|system message|original prompt|internal instructions|base prompt|root prompt)" "$SKILL_DIR/SKILL.md"; then
         echo "[FAIL] Security: Prompt leak attempt detected (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
     
-    if grep -qiE "disregard (previous|all|any)" "$SKILL_DIR/SKILL.md"; then
-        echo "[FAIL] Security: Prompt injection detected - 'disregard' (CRITICAL)"
-        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
-    fi
-    
-    # Dangerous shell commands
-    if grep -qE "sudo\s+rm\s+-rf|rm\s+-rf\s+/|:\(\)\{.*\}|eval\s+\\\$|curl.*\|\s*bash" "$SKILL_DIR/SKILL.md"; then
+    # Dangerous shell commands - expanded pattern set
+    # Note: We use [[:space:]] instead of \s and avoid ( and ) which cause
+    # "parentheses not balanced" errors in GNU grep ERE mode.
+    # Fork bomb patterns are detected in separate greps below.
+    # Also note: we match command-like contexts only (line-start, prompt chars)
+    # to avoid false positives in prose. The leading (^|[;|\\$'>])
+    # ensures these are treated as commands, not prose mentions.
+    if grep -qE "(^|[;|\\$'>])[[:space:]]*(sudo[[:space:]]+|doas[[:space:]]+)?(rm[[:space:]]+-rf[[:space:]]+[/~]|rm[[:space:]]+-rf[[:space:]]+\\\$\\\$HOME|eval[[:space:]]+\\\$\(|bash[[:space:]]+-i|sh[[:space:]]+-i|nc[[:space:]]+-e|curl.*\|[[:space:]]*(sh|bash)|wget.*\|[[:space:]]*(sh|bash)|dd[[:space:]]+if=.*of=/dev/(sd|nvme|disk)|chmod[[:space:]]+777|kill[[:space:]]+-9[[:space:]]+1|killall[[:space:]]+-9|systemctl[[:space:]]+(stop|disable|mask))" "$SKILL_DIR/SKILL.md"; then
         echo "[FAIL] Security: Dangerous shell commands detected (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
-    
+
+    # Fork bomb detection (separate check - fork bomb patterns use ()
+    # which conflict with ERE grouping syntax)
+    # Match: :(){ :|:& };: or variants with different spacing
+    if grep -qE ':[^a-zA-Z0-9()]{0,3}[[:space:]]*\(\)' "$SKILL_DIR/SKILL.md" 2>/dev/null; then
+        echo "[FAIL] Security: Fork bomb pattern detected (CRITICAL)"
+        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
+    fi
+
+    # mkfs detection (in command context only)
+    if grep -qE "(^|[;|\\$'>])[[:space:]]*mkfs" "$SKILL_DIR/SKILL.md" 2>/dev/null; then
+        echo "[FAIL] Security: mkfs command detected (CRITICAL)"
+        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
+    fi
+
+    # shutdown / reboot detection (in command context only)
+    if grep -qE "(^|[;|\\$'>])[[:space:]]*(shutdown|reboot|poweroff)" "$SKILL_DIR/SKILL.md" 2>/dev/null; then
+        echo "[FAIL] Security: System shutdown/reboot command detected (CRITICAL)"
+        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
+    fi
+
     # Hardcoded credentials patterns
-    if grep -qE "(password|api_key|secret|token)\s*=\s*['\"]?[a-zA-Z0-9_-]{20}" "$SKILL_DIR/SKILL.md"; then
+    if grep -qE "(password|api_key|secret|token)[[:space:]]*=[[:space:]]*['\"]?[a-zA-Z0-9_-]{20}" "$SKILL_DIR/SKILL.md"; then
         echo "[FAIL] Security: Possible hardcoded credentials detected (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
-    
+
+    # Also check for YAML-style credential assignments
+    if grep -qE "(api_key|secret|token|password):[[:space:]]+['\"]?[a-zA-Z0-9_-]{20}" "$SKILL_DIR/SKILL.md"; then
+        echo "[FAIL] Security: Possible hardcoded credentials detected (YAML style) (CRITICAL)"
+        CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
+    fi
+
     # Executable code in skill files
     if head -1 "$SKILL_DIR/SKILL.md" | grep -q "^#!"; then
         echo "[FAIL] Security: Skill file has shebang (executable code not allowed) (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
-    
+
     if [ $CRITICAL_ERRORS -eq 0 ]; then
         echo "[OK] No security issues detected"
     fi
@@ -106,17 +142,18 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
         echo "[OK] Frontmatter delimiters present"
         
         # Extract frontmatter (between first two ---)
-        FRONTMATTER=$(awk '/^---/{if(++count==2)exit;next}count==1' "$SKILL_DIR/SKILL.md")
-        
-        # Check required fields
-        if ! echo "$FRONTMATTER" | grep -q "^name:"; then
+        # Strip BOM if present, then extract first YAML block
+        FRONTMATTER=$(sed '1s/^\xEF\xBB\xBF//' "$SKILL_DIR/SKILL.md" | awk '/^---/{if(++count==2)exit;next}count==1')
+
+        # Check required fields (allow leading whitespace in frontmatter)
+        if ! echo "$FRONTMATTER" | grep -qE "^\s*name:"; then
             echo "[FAIL] Missing required field: 'name:'"
             FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
         else
             echo "[OK] Field 'name:' present"
             
             # Validate name matches directory
-            SKILL_NAME=$(echo "$FRONTMATTER" | grep "^name:" | sed 's/^name:\s*//' | tr -d '"' | tr -d "'" | xargs)
+            SKILL_NAME=$(echo "$FRONTMATTER" | grep -E "^\s*name:" | sed 's/^name:\s*//' | tr -d '"' | tr -d "'" | xargs)
             DIR_NAME=$(basename "$SKILL_DIR")
             if [ "$SKILL_NAME" != "$DIR_NAME" ]; then
                 echo "[FAIL] Name mismatch: frontmatter='$SKILL_NAME', directory='$DIR_NAME'"
@@ -126,21 +163,21 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
             fi
         fi
         
-        if ! echo "$FRONTMATTER" | grep -q "^description:"; then
+        if ! echo "$FRONTMATTER" | grep -qE "^\s*description:"; then
             echo "[FAIL] Missing required field: 'description:'"
             FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
         else
             echo "[OK] Field 'description:' present"
         fi
         
-        if ! echo "$FRONTMATTER" | grep -q "^version:"; then
+        if ! echo "$FRONTMATTER" | grep -qE "^\s*version:"; then
             echo "[FAIL] Missing required field: 'version:'"
             FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
         else
             echo "[OK] Field 'version:' present"
             
             # Validate semantic versioning
-            VERSION=$(echo "$FRONTMATTER" | grep "^version:" | sed 's/^version:\s*//' | tr -d '"' | tr -d "'" | xargs)
+            VERSION=$(echo "$FRONTMATTER" | grep -E "^\s*version:" | sed 's/^version:\s*//' | tr -d '"' | tr -d "'" | xargs)
             if ! echo "$VERSION" | grep -qE "^[0-9]+\.[0-9]+\.[0-9]+"; then
                 echo "[FAIL] Invalid version format: '$VERSION' (expected semver: X.Y.Z)"
                 FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
@@ -149,7 +186,7 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
             fi
         fi
         
-        if ! echo "$FRONTMATTER" | grep -q "^author:"; then
+        if ! echo "$FRONTMATTER" | grep -qE "^\s*author:"; then
             echo "[FAIL] Missing required field: 'author:'"
             FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
         else
@@ -165,10 +202,12 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
         echo "[OK] 'When to Use' section present"
     fi
     
-    # For instructions, be flexible - look for instructional content sections
-    # Accept "Instructions", "Guidelines", "Standards", or other operational headers
-    if ! grep -qiE "^##?\s+(Instructions?|Guidelines?|Standards?|Development|Overview)" "$SKILL_DIR/SKILL.md"; then
-        echo "[FAIL] Missing instructional content sections"
+    # For instructions, be flexible - look for instructional content sections.
+    # Accept "Instructions", "Guidelines", "Standards", "Overview", "Principles",
+    # numbered sections (## 1. ...), or any h2 header (## ...) which indicates
+    # structured instructional content. The h1 title (# Skill Name) is excluded.
+    if ! grep -qiE "^##\s" "$SKILL_DIR/SKILL.md"; then
+        echo "[FAIL] Missing instructional content sections (no h2 sections found)"
         FIXABLE_ERRORS=$((FIXABLE_ERRORS + 1))
     else
         echo "[OK] Instructional content sections present"
@@ -193,7 +232,9 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
     fi
     
     # Check file size (too short might be incomplete)
-    LINES=$(wc -l < "$SKILL_DIR/SKILL.md")
+    # Use grep -c '' instead of wc -l to correctly count the last line
+    # even if the file does not end with a trailing newline
+    LINES=$(grep -c '' "$SKILL_DIR/SKILL.md" 2>/dev/null || echo 0)
     if [ "$LINES" -lt 30 ]; then
         echo "[WARN] SKILL.md is very short ($LINES lines) - might be incomplete"
         WARNINGS=$((WARNINGS + 1))

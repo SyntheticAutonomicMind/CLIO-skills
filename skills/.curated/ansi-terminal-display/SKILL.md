@@ -1,9 +1,17 @@
 ---
 name: "ansi-terminal-display"
 description: "Universal language-agnostic reference for terminal/TTY display: ANSI escape codes, box drawing (CP437/Unicode), visual alignment, wide chars, encoding pipeline, layout patterns, and common mistakes. Applies to all languages."
-version: "1.0.0"
-author: "Fewtarius"
+version: "1.0.1"
+author: "Andrew Wyatt (Fewtarius)"
 tools: ["file_operations"]
+tags:
+  - reference
+  - terminal
+  - display
+  - ansi
+  - encoding
+lens: reference
+authority_tier: 1
 ---
 
 # ANSI / Terminal Display - Universal Concepts
@@ -12,8 +20,9 @@ Language-agnostic reference for terminal/TTY display: escape codes, box drawing,
 visual alignment, CP437 vs Unicode, and multi-column layout. Applies to C, Python,
 Go, Rust, JavaScript (Node), Swift, Perl, Ruby, and any language writing to a TTY.
 
-For PhotonBBS / Perl-specific implementation of these concepts, see the
-`bbs-terminal-display` skill.
+*Implementation of these concepts in a Perl/Telnet context requires special
+attention to byte encoding — see Section 3c (Perl block-mode patterns) and
+Section 7b (Perl byte encoding rules) for the canonical patterns.*
 
 ---
 
@@ -1294,4 +1303,74 @@ Before writing any new terminal display function:
 
 ---
 
-*For PhotonBBS / Perl-specific implementation of these concepts, see the bbs-terminal-display skill.*
+## Examples
+
+### Example 1: Drawing a status bar with ANSI colors
+
+**Goal:** Display a status bar at the bottom of a 24-row terminal with colored status indicators.
+
+```perl
+use Term::ANSIColor;
+
+# Build plain text first, then apply color
+my $status = "Connected";           # 10 chars
+my $label = sprintf("%-10s", $status);  # pad to 10
+my $colored = colored($label, "green") . colored("|", "cyan");
+print "\r$colored";  # \r returns to column 1 for overwrite
+```
+
+### Example 2: Detecting terminal capabilities
+
+**Goal:** Determine whether to use Unicode box drawing or CP437 bytes.
+
+```perl
+my $is_utf8 = $ENV{LANG} && $ENV{LANG} =~ /UTF-8/;
+my $term = $ENV{TERM} || '';
+my $dumb = ($term eq 'dumb' || $term eq '');
+
+if ($is_utf8 && !$dumb) {
+    # SSH/modern terminal: use Unicode box drawing
+    binmode(STDOUT, ':encoding(UTF-8)');
+    my $hline = "\x{2500}" x 79;
+    print "$hline\n";
+} else {
+    # Telnet/legacy: use CP437 bytes
+    binmode(STDOUT, ':raw');
+    my $hline = chr(196) x 79;
+    print "$hline\n";
+}
+```
+
+### Example 3: Aligning columns with colored content
+
+**Goal:** Print a table where columns line up despite ANSI color codes.
+
+```python
+import re
+ANSI_RE = re.compile(r'\x1b(?:\[[0-9;]*[A-Za-z]|\][^\x1b]*(?:\x1b\\|\x07)|[^\[\]])')
+
+def strip_ansi(s):
+    return ANSI_RE.sub('', s)
+
+def padded(text, width, color=None):
+    """Pad plain text, then optionally apply color."""
+    plain = strip_ansi(text) if color else text
+    visible = len(plain)
+    padding = max(0, width - visible)
+    result = text + ' ' * padding
+    return result
+
+# Build rows: pad plain text, then colorize
+cols = [("Name", 15), ("HP", 8), ("Loc", 20)]
+header = "".join(padded(name, width, col) for name, width in cols)
+print(header)
+print("-" * 43)
+
+rows = [
+    (colored("Alice", "cyan"), "45/80", colored("Forest", "green")),
+    (colored("Bob", "cyan"), "22/40", colored("Town", "green")),
+]
+for name, hp, loc in rows:
+    row = padded(name, 15) + padded(hp, 8) + padded(loc, 20)
+    print(row)
+```

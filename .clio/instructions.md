@@ -93,25 +93,34 @@ skills-repo/
 │   └── ltm.json             # Long-term memory
 ├── skills/                   # Skills directory
 │   ├── .curated/            # Reviewed, approved skills
-│   │   ├── clio-dev/        # CLIO development skill
-│   │   ├── code-review/     # Code review skill
-│   │   ├── documentation/   # Documentation writing
-│   │   ├── perl-best-practices/
-│   │   ├── terminal-ui/
-│   │   └── test-generator/
-│   ├── .experimental/       # Unreviewed community skills
-│   └── .clio/              # Skills-specific CLIO config
-├── README.md                # Repository overview
+│   │   ├── ansi-terminal-display/
+│   │   ├── capability-drift-check/
+│   │   ├── change-impact-analyzer/
+│   │   ├── cross-language-interface-consistency/
+│   │   ├── probe-engineer/
+│   │   ├── review-code/
+│   │   ├── review-compose/
+│   │   ├── review-document/
+│   │   ├── review-firstprinciples/
+│   │   ├── review-premortem/
+│   │   ├── review-qa/
+│   │   ├── review-redteam/
+│   │   ├── review-stakeholder/
+│   └── .experimental/       # Unreviewed community skills
+│   │   └── merge-conflict-resolution/
+├── README.md                # Repository overview (includes current skill catalog)
 ├── CONTRIBUTING.md          # Contribution guidelines
 └── validate-skill.sh        # Skill validation script
 ```
+
+> **Doc-sync reminder:** When adding or removing skills from `.curated/` or `.experimental/`, update BOTH `README.md` (skill catalog table) and the directory tree above. Never hardcode skill counts — always list directories by name. If this list gets stale, the `ls` commands in Quick Start will show the truth.
 
 ### Directory Purposes
 
 | Directory | Purpose | Status |
 |-----------|---------|--------|
-| `skills/.curated/` | Production-ready skills | [OK] 6 skills |
-| `skills/.experimental/` | Community submissions pending review | [OK] Empty (ready for contributions) |
+| `skills/.curated/` | Production-ready skills | [OK] See README for current catalog |
+| `skills/.experimental/` | Community submissions pending review | [OK] Contains `merge-conflict-resolution` |
 | `.clio/` | CLIO configuration for this repo | [OK] Complete |
 
 ---

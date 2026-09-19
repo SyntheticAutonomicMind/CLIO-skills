@@ -41,9 +41,11 @@ When you are a CLIO agent working on this skills repository, be extremely carefu
 
 1. Create skill directory in `skills/.experimental/`
 2. Include SKILL.md and LICENSE.txt
-3. Submit PR with description of the skill
-4. Address review feedback
-5. Once approved, skill may be promoted to `.curated/`
+3. Run `./validate-skill.sh skills/.experimental/your-skill-name` locally
+4. Submit PR with description of the skill
+5. Address review feedback
+6. Once approved, skill may be promoted to `.curated/`
+7. **If the skill is promoted**, update `README.md` skill catalog and `.clio/instructions.md` directory tree to keep docs in sync
 
 ### Red Flags (Will Be Rejected)
 
