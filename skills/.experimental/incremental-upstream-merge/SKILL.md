@@ -18,11 +18,16 @@ authority_tier: 1
 # Incremental Upstream Merge
 
 This skill captures the procedure for bringing a batch of upstream commits into a
-divergent fork without breaking anything. The single-shot merge of a large
-batch is high-risk: one bad commit among 100 is hard to find, and bisecting
-through a half-broken tree is slow. The incremental approach isolates failure
-to a known group of commits, narrows to a single commit, and the test loop is
-fast enough to be iterative.
+divergent fork **without losing any downstream features, functionality, or bug
+fixes**. The single-shot merge of a large batch is high-risk: one bad commit
+among 100 is hard to find, and bisecting through a half-broken tree is slow.
+The incremental approach isolates failure to a known group of commits, narrows
+to a single commit, and the test loop is fast enough to be iterative.
+
+**Key invariant: every downstream commit that survived before the merge
+must survive after it.** Upstream commits can be reverted, adapted, or
+skipped, but fork-only code is never discarded unless the user explicitly
+agrees.
 
 ## When to Use
 
@@ -305,11 +310,42 @@ cherry-pick, but is more complex.
 Track progress in a markdown log file:
 
 ```markdown
-| Group | Range | Result | HEAD | Notes |
-|-------|-------|--------|------|-------|
-| 1     | A..B  | GOOD   | abc123 | 5 commits, clean |
-| 2     | B..C  | BAD    | def456 | build error, fixed in group |
+| Group | Range | Result | HEAD | Notes | Downstream Preserved |
+|-------|-------|--------|------|-------|---------------------|
+| 1     | A..B  | GOOD   | abc123 | 5 commits, clean | feature-X: OK, feature-Y: OK |
+| 2     | B..C  | BAD    | def456 | build error, fixed in group | feature-X: OK (ported to types.h) |
 ```
+
+## Post-Merge Downstream Audit
+
+After the final group passes and the merge branch is at a verified HEAD,
+audit that downstream features survived:
+
+1. **Compare feature branches.** If the fork has named branches for
+   downstream features, verify they still merge cleanly into the merged
+   HEAD (they may need rebase, but should not be broken).
+
+2. **Diff against the backup tag.** Compare the merged HEAD to the
+   `backup-before-merge-...` tag. Every file/directory that existed in the
+   fork before the merge should still exist, unless an upstream commit
+   intentionally removed it (and you agreed to that removal).
+
+3. **Check downstream-only symbols.** If the fork added functions, classes,
+   CLI flags, config options, or API endpoints, verify they are present at
+   HEAD:
+
+   ```bash
+   git diff <backup_tag> HEAD --name-only | head
+   ```
+
+   Walk through added/modified files to confirm downstream additions survive
+   the restructure. The cherry-pick conflict resolution step (keep fork's
+   version on divergent subsystems) handles this per-group, but a final
+   sweep catches anything auto-merged incorrectly.
+
+4. **Run the downstream test suite.** If the fork has additional tests for
+   its downstream features, run them against the merged HEAD. These tests
+   may not be part of the fast per-group test script.
 
 ## Composition
 
