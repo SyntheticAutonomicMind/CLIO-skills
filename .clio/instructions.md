@@ -110,7 +110,7 @@ skills-repo/
 │   │   ├── review-qa/
 │   │   ├── review-redteam/
 │   │   ├── review-stakeholder/
-│   └── .experimental/       # Unreviewed community skills
+│   │   ├── incremental-upstream-merge/
 │   │   └── merge-conflict-resolution/
 ├── README.md                # Repository overview (includes current skill catalog)
 ├── CONTRIBUTING.md          # Contribution guidelines
@@ -124,7 +124,7 @@ skills-repo/
 | Directory | Purpose | Status |
 |-----------|---------|--------|
 | `skills/.curated/` | Production-ready skills | [OK] See README for current catalog |
-| `skills/.experimental/` | Community submissions pending review | [OK] Contains `merge-conflict-resolution` |
+| `skills/.experimental/` | Community submissions pending review | [OK] Empty (skills promoted to .curated) |
 | `.clio/` | CLIO configuration for this repo | [OK] Complete |
 
 ---
@@ -264,7 +264,7 @@ Before committing any skill:
 6. **Test** (if you have CLIO installed):
    ```bash
    clio
-   /skills install my-skill --experimental
+   /skills install my-skill
    /skills activate my-skill
    # Test the skill behavior
    ```

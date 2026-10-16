@@ -30,14 +30,10 @@ Reviewed and approved skills for general use. These have been tested for quality
 | `audit-documentation` | Adversarial audit of an entire project's documentation system — inventory, cross-reference against implementation, detect contradictions, validate examples |
 | `audit-ui` | Adversarial audit of a UI/interface system — feature matrix, control-to-backend tracing, state sync, responsiveness, and discoverability |
 | `audit-skills` | Adversarial meta-audit of a composable LLM skills repository — inventory, interaction analysis, effectiveness testing, and redundancy detection |
-
-### `.experimental/`
-Community-contributed skills that haven't been fully reviewed. Use with appropriate caution.
-
-| Skill | Description |
-|-------|-------------|
-| `merge-conflict-resolution` | Resolve git merge conflicts by investigating both sides, preserving local additions, and integrating upstream restructuring |
+| `cross-language-interface-consistency` | Ensure symbols crossing language boundaries (FFI, XS, pybind11) stay in sync across implementations |
 | `incremental-upstream-merge` | Cherry-pick upstream commits into a fork in small groups with a fast automated test after each group, isolating regressions to a known commit range |
+| `merge-conflict-resolution` | Resolve git merge conflicts by investigating both sides, preserving local additions, and integrating upstream restructuring |
+| `probe-engineer` | Hypothesis-driven debugging that blocks instrumentation until a falsifiable hypothesis is formed |
 
 ## Installing Skills
 

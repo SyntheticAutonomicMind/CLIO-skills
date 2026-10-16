@@ -1,7 +1,7 @@
 ---
 name: "merge-conflict-resolution"
 description: "Resolve git merge conflicts by investigating both sides, preserving local additions, and integrating upstream restructuring"
-version: "1.0.0"
+version: "1.0.1"
 author: "Andrew Wyatt (Fewtarius)"
 tools: ["version_control", "file_operations", "terminal_operations", "code_intelligence", "todo_operations", "interact"]
 tags:

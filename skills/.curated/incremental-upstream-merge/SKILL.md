@@ -1,7 +1,7 @@
 ---
 name: "incremental-upstream-merge"
 description: "Cherry-pick upstream commits into a fork in small groups with a fast automated test after each group, isolating regressions to a known commit range. Use when integrating a large batch of upstream commits, when previous full-merge attempts caused regressions, or when the fork has divergent subsystems."
-version: "1.0.0"
+version: "1.0.1"
 author: "Andrew Wyatt (Fewtarius)"
 tools: ["version_control", "terminal_operations", "todo_operations", "memory_operations"]
 tags:
