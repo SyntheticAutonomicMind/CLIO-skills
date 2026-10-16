@@ -26,6 +26,10 @@ Reviewed and approved skills for general use. These have been tested for quality
 | `review-qa` | Verify artifacts against stated requirements with evidence-based verdicts |
 | `review-redteam` | Adversarial security and failure-mode review — find where artifacts break, how an attacker or failure scenario exploits them, and why |
 | `review-stakeholder` | Map every stakeholder journey through the artifact to find friction, harm, and misalignment |
+| `audit-codebase` | Systematic adversarial audit of an entire codebase — find, remediate, and verify defects across all subsystems with scope discipline and a self-audit pass |
+| `audit-documentation` | Adversarial audit of an entire project's documentation system — inventory, cross-reference against implementation, detect contradictions, validate examples |
+| `audit-ui` | Adversarial audit of a UI/interface system — feature matrix, control-to-backend tracing, state sync, responsiveness, and discoverability |
+| `audit-skills` | Adversarial meta-audit of a composable LLM skills repository — inventory, interaction analysis, effectiveness testing, and redundancy detection |
 
 ### `.experimental/`
 Community-contributed skills that haven't been fully reviewed. Use with appropriate caution.

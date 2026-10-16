@@ -97,6 +97,10 @@ skills-repo/
 │   │   ├── capability-drift-check/
 │   │   ├── change-impact-analyzer/
 │   │   ├── cross-language-interface-consistency/
+│   │   ├── audit-codebase/
+│   │   ├── audit-documentation/
+│   │   ├── audit-ui/
+│   │   ├── audit-skills/
 │   │   ├── probe-engineer/
 │   │   ├── review-code/
 │   │   ├── review-compose/
