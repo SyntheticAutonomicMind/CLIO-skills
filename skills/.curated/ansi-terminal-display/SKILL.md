@@ -648,8 +648,7 @@ encoded bytes. Ensure your terminal size comes from the PTY `TIOCGWINSZ` request
 
 `use open ':std', ':encoding(UTF-8)'` wraps STDOUT with a UTF-8 encoding layer.
 Every `print` call now re-encodes your bytes. If `boxchar()` returns `chr(196)`
-(the CP437 `─` byte, 0xC4), Perl encodes it as UTF-8: `C3 84` (two bytes: Ã Ä).
-A CP437 telnet terminal sees garbled text: `ÎÃ¶ÃÎÃ¶Ã` instead of `─────`.
+(the CP437 `─` byte, 0xC4), Perl encodes it as UTF-8: `C3 84` (two bytes). A CP437 telnet terminal sees garbled text: `├ä├ä├ä` instead of `───` (where `├` is 0xC3 and `ä` is 0x84 in CP437).
 
 ```perl
 # WRONG - puts a UTF-8 encoding layer on stdout:
