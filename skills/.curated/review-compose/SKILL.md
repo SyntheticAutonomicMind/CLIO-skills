@@ -167,7 +167,7 @@ Produce a single markdown document with five sections:
 
 ### review-redteam
 
-[Full red-team critique - 12 dimensions]
+[Full red-team critique - 6 focus areas]
 
 ### review-qa
 

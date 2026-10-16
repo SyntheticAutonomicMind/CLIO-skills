@@ -82,10 +82,11 @@ if [ -f "$SKILL_DIR/SKILL.md" ]; then
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi
 
-    # Fork bomb detection (separate check - fork bomb patterns use ()
-    # which conflict with ERE grouping syntax)
+    # Fork bomb detection (separate check)
     # Match: :(){ :|:& };: or variants with different spacing
-    if grep -qE ':[^a-zA-Z0-9()]{0,3}[[:space:]]*\(\)' "$SKILL_DIR/SKILL.md" 2>/dev/null; then
+    # Note: \(\) in ERE is an empty capture group, which matches the empty
+    # parens in a fork bomb. This is portable across grep implementations.
+    if grep -qE ':[^a-zA-Z0-9]{0,3}[[:space:]]*\(\)' "$SKILL_DIR/SKILL.md" 2>/dev/null; then
         echo "[FAIL] Security: Fork bomb pattern detected (CRITICAL)"
         CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1))
     fi

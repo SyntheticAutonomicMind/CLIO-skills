@@ -346,7 +346,7 @@ Produce a single markdown document with the following sections:
 
 ## Examples
 
-**User:** "Audit the UI in this React plugin for correctness."
+**User:** "Audit the UI in this web plugin for correctness."
 
 **Agent:**
 1. Reads package.json, AGENTS.md, STYLE_GUIDE.md, README.md — establishes build uses Vite + React + TypeScript, Decky UI framework

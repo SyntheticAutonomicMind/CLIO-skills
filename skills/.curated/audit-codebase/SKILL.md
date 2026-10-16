@@ -306,13 +306,13 @@ Produce a single markdown document with the following sections:
 
 ## Examples
 
-**User:** "Audit the entire PowerDeck repository for defects."
+**User:** "Audit the entire repository for defects."
 
 **Agent:**
-1. Maps the repository: `src/` (Rust backend), `ui/` (Decky plugin frontend), `tests/`, `README.md`, CI workflows, package.json
-2. Builds an audit checklist covering all 15 directories
-3. Traces execution: CLI entry point `src/main.rs:47` -> `PowerStateManager` -> sysfs writes -> `fan_controller` -> temperature polling -> error handling
-4. During the fan controller review, notices that `set_pwm_duty_cycle` returns `Result<(), io::Error>` but callers in `profile_manager.rs:189` and `ac_handler.rs:73` both discard the result with `let _ =`
+1. Maps the repository: `src/` (backend modules), `frontend/` (web UI), `tests/`, `docs/`, `configs/`, `AGENTS.md`, `package.json`, CI workflows
+2. Builds an audit checklist covering all 12 directories
+3. Traces execution: `src/main.go:47` -> `PowerStateManager` -> sysfs writes -> `fan_controller` -> temperature polling -> error handling
+4. During the fan controller review, notices that `set_pwm_duty_cycle()` in `src/fan_controller.go:33` returns an error but callers in `src/profile_manager.go:189` and `src/ac_handler.go:73` both discard the result
 5. Writes a regression test that simulates an I/O failure, confirms the error is swallowed
 6. Fixes by propagating the error up the call chain
 7. Runs tests, inspects diff, checks callers
