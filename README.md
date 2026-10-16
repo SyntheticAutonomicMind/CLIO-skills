@@ -37,6 +37,7 @@ Community-contributed skills that haven't been fully reviewed. Use with appropri
 | Skill | Description |
 |-------|-------------|
 | `merge-conflict-resolution` | Resolve git merge conflicts by investigating both sides, preserving local additions, and integrating upstream restructuring |
+| `incremental-upstream-merge` | Cherry-pick upstream commits into a fork in small groups with a fast automated test after each group, isolating regressions to a known commit range |
 
 ## Installing Skills
 
