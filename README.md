@@ -49,8 +49,8 @@ CLIO can download and install skills from this repository:
 # Download and install a skill
 /skills install <skill-name>
 
-# Or from experimental
-/skills install <skill-name> --experimental
+# Install into user scope (visible in all projects)
+/skills install <skill-name> --scope=user
 ```
 
 ## Creating Skills
@@ -64,7 +64,7 @@ Each skill is a directory containing:
 ```
 skill-name/
 ├── SKILL.md        # Required: Skill definition and instructions
-├── LICENSE.txt     # Required: License (GPLv3 recommended)
+├── LICENSE.txt     # Required: License (GPLv3)
 ├── agents/         # Optional: Agent configurations
 ├── scripts/        # Optional: Helper scripts
 └── assets/         # Optional: Templates, examples, etc.
@@ -79,6 +79,11 @@ description: "Brief description (shown in /skills list)"
 version: "1.0.0"
 author: "Your Name"
 tools: ["file_operations", "terminal_operations"]  # Optional: Tools this skill uses
+tags:
+  - review        # Optional: Categorization tags
+lens: methodology  # Optional: Skill classification (reference, methodology, verification, etc.)
+authority_tier: 1  # Optional: Authority level (1 = authoritative, 2 = advisory, etc.)
+depends: []        # Optional: Other skills this skill references or composes
 ---
 
 # Skill Name

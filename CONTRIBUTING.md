@@ -23,7 +23,6 @@ When you are a CLIO agent working on this skills repository, be extremely carefu
 
 2. **LICENSE.txt Required**
    - GPLv3 License required
-   - Other OSI-approved licenses accepted
 
 3. **Safety Requirements**
    - No instructions that bypass CLIO's security measures
